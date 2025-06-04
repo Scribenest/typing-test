@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Medical Transcription Assessment</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            padding: 30px;
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+
+        .instructions {
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            font-size: 16px;
+            padding: 10px;
+            margin-top: 10px;
+            resize: none;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px 5px;
+            cursor: pointer;
+        }
+
+        #timer, #timer2 {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .playing {
+            color: green;
+            font-weight: bold;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #results, #results2 {
+            display: none;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Medical Transcription Assessment</h1>
+
+    <div class="instructions">
+        <h2>Instructions</h2>
+        <ol>
+            <li>Click <strong>Start Assessment</strong> to begin.</li>
+            <li>The audio recording of a medical case scenario will play <strong>once only</strong>. You cannot pause or replay it.</li>
+            <li>As soon as the audio begins, the timer starts. You have <strong>90 seconds</strong> to write out the key information in the textbox.</li>
+            <li>You will begin typing after the template: <em>"Patient is a 30 year old female/male who presents to the ED complaining of ***"</em>.</li>
+            <li>If the 90 seconds expires, your transcription will be automatically submitted.</li>
+        </ol>
+        <p><strong>Important Notes:</strong></p>
+        <ul>
+            <li>This assessment is designed to evaluate how well you can <strong>listen</strong> and <strong>identify key, pertinent information</strong> from the scenario you hear.</li>
+            <li>You are <strong>not</strong> expected to transcribe every single word. <strong>Paraphrasing is encouraged</strong> as long as the essential information is accurately captured.</li>
+            <li>Use <strong>complete sentences</strong>. Do not use bullet points, lists, or shorthand.</li>
+            <li>You are <strong>not</strong> being tested on medical knowledge, HPI (history of present illness) writing, or any formal scribing techniques.</li>
+            <li>The goal is to assess how effectively you can extract important details from what is said and express them clearly and accurately in writing.</li>
+            <li>If time allows, feel free to revise or edit your sentences for clarity.</li>
+            <li><strong>Reminder:</strong> The audio will play <strong>once only</strong>. Be prepared to listen attentively from the beginning.</li>
+            <li><strong>Scenario 2</strong> is available if you require a <strong>practice round</strong> or <strong>second try</strong>.</li>
+        </ul>
+    </div>
+
+    <!-- First Attempt -->
+    <h2>Scenario 1</h2>
+    <div id="timer">Timer: 0s</div>
+    <div id="audioStatus">Audio not playing</div>
+    <button id="startBtn">Start Scenario 1</button>
+    <button id="submitBtn" disabled>Submit Transcription</button>
+    <textarea id="transcriptionText" disabled></textarea>
+
+    <!-- Second Attempt -->
+    <hr/>
+    <h2>Scenario 2</h2>
+    <div id="timer2">Timer: 0s</div>
+    <div id="audioStatus2">Audio not playing</div>
+    <button id="startBtn2">Start Scenario 2</button>
+    <button id="submitBtn2" disabled>Submit Second Transcription</button>
+    <textarea id="transcriptionText2" disabled></textarea>
+
+    <!-- Audio Elements -->
+    <audio id="audio" src="https://www.dl.dropboxusercontent.com/scl/fi/83ze999zw7q0el8v3pm31/audio_recording_scribenest.mp3?rlkey=jnsq0kx5kwqam26p3wm4jyt1c&st=l9cltpdp"></audio>
+    <audio id="audio2" src="https://www.dl.dropboxusercontent.com/scl/fi/4lnh1m4w9xczgfkh9kcne/New_Project.mp3?rlkey=4rv2f1nnjxqj1nheiff2ov5q0&st=5irshqgu"></audio>
+
+    <!-- Results -->
+    <div id="results">
+        <h2>Assessment Results - Scenario 1</h2>
+        <p id="timeResult"></p>
+        <p id="wpmResult"></p>
+        <h3>Original Script:</h3>
+        <p id="originalText"></p>
+        <h3>Your Submission:</h3>
+        <p id="userText"></p>
+    </div>
+
+    <div id="results2">
+        <h2>Assessment Results - Scenario 2</h2>
+        <p id="timeResult2"></p>
+        <p id="wpmResult2"></p>
+        <h3>Original Script:</h3>
+        <p id="originalText2"></p>
+        <h3>Your Submission:</h3>
+        <p id="userText2"></p>
+    </div>
+
+    <script>
+        const presetText = "Patient is a 30 year old female who presents to the ED complaining of ";
+        const presetText2 = "Patient is a 30 year old male who presents to the ED complaining of ";
+
+        const originalScript = "Patient is a 30 year old female who presents to the ED via EMS complaining of mid-sternal chest pain that started today, about 2 hours ago while she was sitting on her couch. Associated sx of SOB, diaphoresis. Patient describes pain as heavy and tight with pressure like sensation. EMS administered Nitroglycerin en route that improved the patient's pain to a 4/10. She denies any radiating pain down to her arm, jaw, or back. Denies any prior episode of similar symptoms. Pt denies nausea, vomiting, syncope, or any other sx at this time.";
+
+        const originalScript2 = "Patient is a 30 year old male who presents to the ED complaining of right lower abd pain that started this morning after eating breakfast. Associated symptoms of nausea. Pt describes pain as sharp and crampy that has been progressively worsening throughout the day. He denies prior episodes of pain. Pt denies fever, or any other sx at this time.";
+
+        function setupAssessment(audioId, startBtnId, submitBtnId, textareaId, timerId, audioStatusId, resultsId, timeResultId, wpmResultId, userTextId, preset, original, originalTextElementId) {
+            const audio = document.getElementById(audioId);
+            const startBtn = document.getElementById(startBtnId);
+            const submitBtn = document.getElementById(submitBtnId);
+            const textarea = document.getElementById(textareaId);
+            const timerDisplay = document.getElementById(timerId);
+            const audioStatus = document.getElementById(audioStatusId);
+
+            let timer = 0;
+            let interval;
+
+            startBtn.addEventListener("click", () => {
+                textarea.disabled = false;
+                textarea.value = preset;
+                textarea.focus();
+                textarea.setSelectionRange(preset.length, preset.length);
+                submitBtn.disabled = false;
+                startBtn.disabled = true;
+
+                audio.play();
+                audioStatus.textContent = "Audio playing...";
+                audioStatus.classList.add("playing");
+
+                interval = setInterval(() => {
+                    timer++;
+                    timerDisplay.textContent = `Timer: ${timer}s`;
+                    if (timer >= 90) {
+                        clearInterval(interval);
+                        submit();
+                    }
+                }, 1000);
+            });
+
+            submitBtn.addEventListener("click", submit);
+
+            function submit() {
+                clearInterval(interval);
+                textarea.disabled = true;
+                submitBtn.disabled = true;
+                audio.pause();
+                audio.currentTime = 0;
+                audioStatus.textContent = "Audio stopped";
+                audioStatus.classList.remove("playing");
+
+                document.getElementById(resultsId).style.display = "block";
+                document.getElementById(timeResultId).textContent = `Time taken: ${timer}s`;
+                const userText = textarea.value.trim();
+                const wordCount = userText ? userText.split(/\s+/).length : 0;
+                const wpm = wordCount > 0 && timer > 0 ? Math.round((wordCount / timer) * 60) : "N/A";
+                document.getElementById(wpmResultId).textContent = `Typing speed: ${wpm === "N/A" ? "N/A" : wpm + " WPM"}`;
+                document.getElementById(userTextId).textContent = userText;
+                if (originalTextElementId) document.getElementById(originalTextElementId).textContent = original;
+            }
+
+            audio.addEventListener("ended", () => {
+                audioStatus.textContent = "Audio ended";
+                audioStatus.classList.remove("playing");
+            });
+        }
+
+        setupAssessment("audio", "startBtn", "submitBtn", "transcriptionText", "timer", "audioStatus", "results", "timeResult", "wpmResult", "userText", presetText, originalScript, "originalText");
+        setupAssessment("audio2", "startBtn2", "submitBtn2", "transcriptionText2", "timer2", "audioStatus2", "results2", "timeResult2", "wpmResult2", "userText2", presetText2, originalScript2, "originalText2");
+    </script>
+</body>
+</html>
